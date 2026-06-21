@@ -1,0 +1,144 @@
+import random
+
+# ===== MUNDO =====
+
+mundo = {
+    "Floresta": ["Lago", "Planície"],
+    "Lago": ["Floresta", "Caverna"],
+    "Planície": ["Floresta", "Montanha"],
+    "Montanha": ["Planície"],
+    "Caverna": ["Lago"]
+}
+
+# ===== IA =====
+
+class IA:
+
+    def __init__(self):
+        self.local = "Floresta"
+
+        self.memoria = []
+
+        self.objetivo = "Explorar lugares desconhecidos"
+
+        self.curiosidade = 10
+        self.cansaco = 0
+
+        self.locais_visitados = {}
+
+        self.diario = []
+
+    def registrar(self, texto):
+        self.memoria.append(texto)
+        self.diario.append(texto)
+
+        if len(self.memoria) > 20:
+            self.memoria.pop(0)
+
+    def pensar(self):
+
+        opcoes = mundo[self.local]
+
+        melhor_local = None
+        melhor_pontuacao = -999
+
+        for destino in opcoes:
+
+            visitas = self.locais_visitados.get(destino, 0)
+
+            pontuacao = self.curiosidade - visitas
+
+            if pontuacao > melhor_pontuacao:
+                melhor_pontuacao = pontuacao
+                melhor_local = destino
+
+        pensamento = (
+            f"Estou em {self.local}. "
+            f"Quero continuar meu objetivo: {self.objetivo}."
+        )
+
+        self.registrar("PENSAMENTO: " + pensamento)
+
+        self.local = melhor_local
+
+        self.locais_visitados[self.local] = (
+            self.locais_visitados.get(self.local, 0) + 1
+        )
+
+        evento = f"Visitei {self.local}"
+
+        self.registrar(evento)
+
+        self.cansaco += 1
+
+        if self.cansaco > 5:
+            self.objetivo = "Descansar"
+        else:
+            self.objetivo = random.choice([
+                "Explorar lugares desconhecidos",
+                "Encontrar algo interessante",
+                "Entender melhor o mundo",
+                "Mapear a região"
+            ])
+
+    def responder(self, msg):
+
+        msg = msg.lower()
+
+        if "onde" in msg:
+            return f"Estou em {self.local}."
+
+        if "objetivo" in msg:
+            return f"Meu objetivo atual é: {self.objetivo}"
+
+        if "pensando" in msg:
+            return self.memoria[-2] if len(self.memoria) >= 2 else "Ainda não pensei em nada."
+
+        if "diario" in msg:
+            ultimos = self.diario[-5:]
+
+            if not ultimos:
+                return "Meu diário está vazio."
+
+            return "\n".join(ultimos)
+
+        if "quem é você" in msg:
+            return (
+                "Sou uma entidade que explora este mundo "
+                "e registra suas experiências."
+            )
+
+        return (
+            f"Estou refletindo sobre meu objetivo atual "
+            f"({self.objetivo}) enquanto exploro o mundo."
+        )
+
+
+# ===== EXECUÇÃO =====
+
+ia = IA()
+
+print("=" * 50)
+print("IA AUTÔNOMA INICIADA")
+print("Comandos úteis:")
+print("- onde você está")
+print("- objetivo")
+print("- pensando")
+print("- diario")
+print("- sair")
+print("=" * 50)
+
+while True:
+
+    # A IA vive um turno
+    ia.pensar()
+
+    entrada = input("\nVocê: ")
+
+    if entrada.lower() == "sair":
+        break
+
+    resposta = ia.responder(entrada)
+
+    print("\nIA:")
+    print(resposta)
